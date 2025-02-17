@@ -266,7 +266,7 @@ app.post("/stkpushquery", generateToken, async (req, res) => {
 
 app.post('/add-product',async (req,res)=>{
   const {name,price,category,imageUrls}=req.body;
-  const product = new Product({name,price,category});
+  const product = new Product({name,price,category,imageUrls});
   await product.save();
   res.json("new product created")
 })
