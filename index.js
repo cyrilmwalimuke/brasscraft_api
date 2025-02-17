@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv'
 import IntaSend from "intasend-node";
 import Product from './Product.js'
+import dotenv from 'dotenv'
 
 
 dotenv.config()
@@ -17,7 +18,7 @@ const intasend = new IntaSend("ISPubKey_live_48e76b14-a0d7-463e-abd5-edca9a3a8c0
 
 const INTA_SEND_API_KEY = "ISSecretKey_live_58f1dcd9-9769-49ea-bc94-90f0d300cf3f" ;
 const INTA_SEND_API_URL = "https://api.intasend.com/v1/checkout/";
-
+const PORT = process.env.PORT || 3000;
 const app = express()
 
 app.use(express.json())
@@ -281,6 +282,6 @@ app.get('/get', async(req,res)=>{
 
 
 
-app.listen(3000,()=>{console.log("app is running on port 3000")
+app.listen(PORT,()=>{console.log("app is running on port 3000")
 
 })
