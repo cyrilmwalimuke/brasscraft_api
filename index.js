@@ -6,7 +6,6 @@ import Order from './order.js'
 import User from './User.js'
 import { errorHandler } from './error.js'
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv'
 import IntaSend from "intasend-node";
 import Product from './Product.js'
 import dotenv from 'dotenv'
