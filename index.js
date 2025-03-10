@@ -135,7 +135,7 @@ app.post('/login',async(req,res,next)=>{
 try {
   const validUser = await User.findOne({email})
   if (!validUser) return next(errorHandler(404, 'User not found!'));
-  const token =jwt.sign({id:validUser._id},process.env.JWTSECRET)
+  const token =jwt.sign({id:validUser._id},process.env.JWT_SECRET)
   const {password:pass,...rest} = validUser._doc
   res.cookie('access_token',token,{httpOnly:true}).status(200).json(rest)
 } catch (error) {
@@ -146,7 +146,7 @@ try {
 
 
 const generateBasicAuthToken = () => {
-  return "Basic " + Buffer.from("mIZwO0h4EctuL3xplwLl:Dm8Ho4QbItbUv9OgHptIpa9sqM4EURKgXWeTjBJJ").toString("base64");
+  return "Basic " + Buffer.from(process.env.PAYHERO_URL).toString("base64");
 };
 
 app.post('/pay-hero',async(req,res)=>{
@@ -225,7 +225,7 @@ console.log(token)
     service: "gmail",
     auth: {
       user: "cyrilmwalimuke@gmail.com", // Replace with your Gmail email
-      pass: "sgod awzc wnoq mhat", // Replace with your App Password
+      pass: process.env.NODEMAILER_PASS, // Replace with your App Password
     },
   });
   
