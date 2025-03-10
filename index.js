@@ -254,6 +254,7 @@ res.json('check out your email to proceed')
 })
 
 
+
 app.post("/forgot-password-2/:token", async (req, res) => {
   const { token} = req.params;
   const { newPassword } = req.body;
@@ -268,6 +269,109 @@ app.post("/forgot-password-2/:token", async (req, res) => {
  
 });
 
+// newsletter
+app.post("/newsletter",async(req,res)=>{
+  const {email} = req.body
+  console.log(email)
+
+
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "cyrilmwalimuke@gmail.com", // Replace with your Gmail email
+      pass: process.env.NODEMAILER_PASS, // Replace with your App Password
+    },
+  });
+  
+  // Email options
+  const mailOptions = {
+    from: "okwomicyril@gmail.com",
+    to: email,
+    subject: "Welcome to BrassCraft – You're In!",
+    
+    html: `<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to BrassCraft</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #d4af37;
+        }
+        p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .btn {
+            background-color: #d4af37;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px 20px;
+            font-size: 18px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Welcome to BrassCraft! 🎉</h1>
+        <p>Thank you for subscribing! You’re now part of our exclusive circle, where you'll receive:</p>
+        <ul style="text-align: left; padding: 0 20px; color: #555; font-size: 16px;">
+            <li>✨ First access to new jewelry collections</li>
+            <li>💎 Exclusive subscriber-only offers</li>
+            <li>🎨 Styling tips and inspiration</li>
+        </ul>
+        <p>We can’t wait to share our latest designs with you!</p>
+        <a href="https://brasscraft.com/shop" class="btn">Explore Our Collection</a>
+        
+        <p class="footer">
+            If you ever wish to unsubscribe, you can do so anytime <a href="#">here</a>.
+        </p>
+    </div>
+
+</body>
+</html>`,
+   
+    
+  };
+  
+  // Send the email
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error("Error sending email:", error);
+    } else {
+      console.log("Email sent:", info.response);
+    }
+  });
+
+
+
+})
 
 
 
