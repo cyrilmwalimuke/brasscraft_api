@@ -29,6 +29,10 @@ mongoose.connect(process.env.MONGO_URL).then(()=>console.log("connected to mongo
 let token
 console.log(token)
 
+app.get('/',(req,res)=>{
+  res.json("app is running fine")
+})
+
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
