@@ -6,31 +6,28 @@ import Order from './order.js'
 import User from './User.js'
 import { errorHandler } from './error.js'
 import jwt from 'jsonwebtoken';
-import IntaSend from "intasend-node";
 import Product from './Product.js'
 import dotenv from 'dotenv'
+import nodemailer from 'nodemailer'
 
 
 dotenv.config()
 
-const intasend = new IntaSend("ISPubKey_live_48e76b14-a0d7-463e-abd5-edca9a3a8c07", "ISSecretKey_live_58f1dcd9-9769-49ea-bc94-90f0d300cf3f", true);
 
-const INTA_SEND_API_KEY = "ISSecretKey_live_58f1dcd9-9769-49ea-bc94-90f0d300cf3f" ;
-const INTA_SEND_API_URL = "https://api.intasend.com/v1/checkout/";
 const PORT = process.env.PORT || 10000;
 const app = express()
 
 app.use(express.json())
 app.use(cors())
 
+
+
+
+mongoose.connect(process.env.MONGO_URL).then(()=>console.log("connected to mongodb")).catch((err)=>console.log(err))
+
+
 let token
-let basicAuthToken
-
-
-
-
-mongoose.connect('mongodb+srv://cyrilmwalimuke:Kr9KySKT0aUfZlNc@brasscraft.3iys1.mongodb.net/?retryWrites=true&w=majority&appName=brasscraft').then(()=>console.log("connected to mongodb")).catch((err)=>console.log(err))
-
+console.log(token)
 
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
@@ -111,82 +108,7 @@ app.post('/create-user',(req,res)=>{
 
 
 
-const generateToken =async(res,req,next) =>{
-  const secret = "VGG6SG6SK3QhKKyvpNC0p60VTVTAden9NiN7jWKsqZyclptmhOmL1ZHYTixe8zrg";
-  const consumer = "eRFLuwLACviRoaB0lp4YSqtxzoQy0QzM1zAEYAfYLlJrmD5e";
-  const auth = new Buffer.from(`${consumer}:${secret}`).toString("base64");
-  await axios
-    .get(
-      "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-      {
-        headers: {
-          authorization: `Basic ${auth}`,
-        },
-      }
-    )
-    .then((data) => {
-      token = data.data.access_token;
-      // console.log(data.data);
-      // console.log(token)
-      next();
-    })
-    .catch((err) => {
-      // console.log(err);
-      res.status(400).json(err.message);
-    });
 
-
-
-}
-
-app.post("/stkPush",generateToken, async(req,res)=>{
-  const shortCode = 174379;
-  const phone = req.body.phone.substring(1);
-  const amount = req.body.amount;
-  console.log(phone,amount)
-  const passkey ="bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
-  const url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest";
-
-  const date = new Date();
-  const timestamp =
-    date.getFullYear() +
-    ("0" + (date.getMonth() + 1)).slice(-2) +
-    ("0" + date.getDate()).slice(-2) +
-    ("0" + date.getHours()).slice(-2) +
-    ("0" + date.getMinutes()).slice(-2) +
-    ("0" + date.getSeconds()).slice(-2);
-  const password = new Buffer.from(shortCode + passkey + timestamp).toString(
-    "base64"
-  );
-  const data = {
-    BusinessShortCode: shortCode,
-    Password: password,
-    Timestamp: timestamp,
-    TransactionType: "CustomerPayBillOnline",
-    Amount: amount,
-    PartyA: `254${phone}`,
-    PartyB: 174379,
-    PhoneNumber: `254${phone}`,
-    CallBackURL: "https://mydomain.com/path",
-    AccountReference: "Mpesa Test",
-    TransactionDesc: "Testing stk push",
-  };
-
-  await axios
-    .post(url, data, {
-      headers: {
-        authorization: `Bearer ${token}`,
-      },
-    })
-    .then((data) => {
-      console.log(data.data);
-      res.status(201).json(data.data);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(400).json(err.message);
-    });
-})
 
 
 
@@ -196,6 +118,7 @@ app.post('/sign-up', async (req,res,next)=>{
   try {
      await newUser.save()
       res.json('new user created')
+      console.log("new user created")
       
   } catch (error) {
       next(errorHandler(409,'user already exists!'))
@@ -218,50 +141,52 @@ try {
 })
 
 
+const generateBasicAuthToken = () => {
+  return "Basic " + Buffer.from("mIZwO0h4EctuL3xplwLl:Dm8Ho4QbItbUv9OgHptIpa9sqM4EURKgXWeTjBJJ").toString("base64");
+};
 
-app.post("/stkpushquery", generateToken, async (req, res) => {
-  const CheckoutRequestID = req.body.CheckoutRequestID;
-  console.log(CheckoutRequestID)
+app.post('/pay-hero',async(req,res)=>{
+  const { amount, phone_number, channel_id, external_reference } = req.body;
+  console.log(req.body)
+  
 
-  const date = new Date();
-  const timestamp =
-    date.getFullYear() +
-    ("0" + (date.getMonth() + 1)).slice(-2) +
-    ("0" + date.getDate()).slice(-2) +
-    ("0" + date.getHours()).slice(-2) +
-    ("0" + date.getMinutes()).slice(-2) +
-    ("0" + date.getSeconds()).slice(-2);
-  const shortCode = 174379;
-  const passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
-
-  const password = new Buffer.from(shortCode + passkey + timestamp).toString(
-    "base64"
+  const PAYHERO_API_URL = "https://backend.payhero.co.ke/api/v2/payments";
+const CALLBACK_URL = "https://your-ngrok-url.ngrok-free.app/callback";
+  try {
+   const response = await axios.post(
+    PAYHERO_API_URL,
+    {
+      amount: parseFloat(amount),
+      phone_number,
+      channel_id,
+      provider: "m-pesa",
+      external_reference,
+      callback_url: CALLBACK_URL,
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: generateBasicAuthToken(),
+      },
+    }
   );
 
-  await axios
+  res.json({ success: true, data: response.data });
+} catch (error) {
+  console.error("Payment Error:", error.response ? error.response.data : error.message);
+  res.json({
+    success: false,
+    message: error.response ? error.response.data : "Payment request failed",
+  });
+}
 
-    .post(
-      "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query",
-      {
-        BusinessShortCode: shortCode,
-        Password: password,
-        Timestamp: timestamp,
-        CheckoutRequestID: CheckoutRequestID,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
-    .then((responce) => {
-      res.status(200).json(responce.data);
-    })
-    .catch((err) => {
-      console.log(err.message);
-      res.status(400).json(err);
-    });
-});
+
+}
+
+)
+
+
+
 
 
 app.post('/add-product',async (req,res)=>{
@@ -277,10 +202,72 @@ app.get('/get', async(req,res)=>{
 })
 
 
+app.post("/forgot-password-email",async(req,res)=>{
+  const {email} = req.body
+  console.log(email)
+
+  const user = await User.findOne({email})
+  if(!user){
+    res.json('no user found')
+    return 
+    
+  }
+  token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+console.log(token)
+  const resetLink = ` https://8d88-102-222-145-127.ngrok-free.app/forgot-password-2/${token}`;
+  console.log(resetLink)
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "cyrilmwalimuke@gmail.com", // Replace with your Gmail email
+      pass: "sgod awzc wnoq mhat", // Replace with your App Password
+    },
+  });
+  
+  // Email options
+  const mailOptions = {
+    from: "okwomicyril@gmail.com",
+    to: email,
+    subject: "Password Reset",
+    
+    html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link is valid for 1 hour.</p>`,
+   
+    
+  };
+  
+  // Send the email
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error("Error sending email:", error);
+    } else {
+      console.log("Email sent:", info.response);
+    }
+  });
+res.json('check out your email to proceed')
+
+
+})
+
+
+app.post("/forgot-password-2/:token", async (req, res) => {
+  const { token} = req.params;
+  const { newPassword } = req.body;
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const user = await User.findById(decoded.id);
+  console.log(user)
+  if (!user) return res.status(400).json({ message: "Invalid token" });
+  user.password = newPassword;
+  await user.save();
+
+ 
+});
 
 
 
 
-app.listen(PORT,()=>{console.log("app is running on port 3000")
+
+app.listen(PORT,()=>{console.log("app is running on port 10000")
 
 })
