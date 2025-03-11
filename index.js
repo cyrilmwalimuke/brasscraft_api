@@ -146,7 +146,7 @@ try {
 
 
 const generateBasicAuthToken = () => {
-  return "Basic " + Buffer.from(process.env.PAYHERO_URL).toString("base64");
+  return "Basic " + Buffer.from("WbcRQ0MRLyphfQLEndRh:OYJZnxU8Zz4b0f08gSGTGkO4JoT2DWsMViEHnNnd").toString("base64");
 };
 
 app.post('/pay-hero',async(req,res)=>{
