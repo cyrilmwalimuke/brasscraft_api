@@ -97,6 +97,11 @@ app.get('/orders',async(req,res)=>{
     res.status(200).json(allOrders)
     // console.log(allOrders)
 })
+app.get('/single-order/:id',async(req,res)=>{
+  console.log('hello world')
+  const order  = await Order.findById(req.params.id)
+  res.json(order)
+})
 
 
 

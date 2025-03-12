@@ -45,6 +45,12 @@ const userSchema = new mongoose.Schema({
     contact:{
         type:String
     },
+    isAdmin:{
+        type:Boolean,
+        default:false
+
+
+    },
     wishItems: {
         type: [wishSchema],
         required: true
