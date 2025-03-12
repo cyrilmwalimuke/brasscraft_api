@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
 // Define the schema for a cart item
-const cartItemSchema = new mongoose.Schema({
+const orderItemSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true
@@ -44,8 +44,8 @@ const OrderSchema = new mongoose.Schema({
     required: true,
     min: 1
   },
-  cartItems: {
-    type: [cartItemSchema],
+  orderItems: {
+    type: [orderItemSchema],
     required: true
   },
   total: {
@@ -60,11 +60,11 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  address: {
+  email: {
     type: String,
     required: true
   },
-  contact: {
+  phone_number: {
     type: String,
     required: true
   },
@@ -72,14 +72,18 @@ const OrderSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  pickUpStation: {
+  deliveryStation: {
     type: String,
     required: true
   },
+  status:{
+    type:String,
+    default:'processing'
+  }
   
 
   
-});
+},{timestamps:true});
 
 // Create the Cart model from the schema
 const Order = mongoose.model('Order', OrderSchema);

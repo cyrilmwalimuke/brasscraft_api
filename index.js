@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken';
 import Product from './Product.js'
 import dotenv from 'dotenv'
 import nodemailer from 'nodemailer'
+import Visitor from './Visitors.js'
 
 
 dotenv.config()
@@ -43,24 +44,25 @@ app.use((err, req, res, next) => {
     });
   });
 
-app.post('/create-order',(req,res)=>{
+app.post('/creats',async(req,res)=>{
+  console.log("hello")
     const {
         userRef,
         amount,
-        cartItems,
+        orderItems,
         total,
         firstName,
         lastName,
-        address,
-        contact,
+        email,
+        phone_number,
         deliveryFee,
-        pickUpStation,
+        deliveryStation,
 
 
 
     } = req.body
-    res.status(200).json("new order created")
-    // console.log(req.body)
+    console.log(req.body)
+
     
 
     const newOrder = new Order(
@@ -68,18 +70,19 @@ app.post('/create-order',(req,res)=>{
 
        userRef,
         amount,
-        cartItems,
+        orderItems,
         total,
         firstName,
         lastName,
-        address,
-        contact,
+        email,
+        phone_number,
         deliveryFee,
-        pickUpStation,
+        deliveryStation,
     })
     try {
-        newOrder.save()
+     await newOrder.save()
         res.status(201).json("order saved succesfully")
+        console.log("order created")
         
     } catch (error) {
         
@@ -94,21 +97,7 @@ app.get('/orders',async(req,res)=>{
     res.status(200).json(allOrders)
     // console.log(allOrders)
 })
-app.post('/create-user',(req,res)=>{
-    const {firstName,lastName}= req.body
-    const newUser = new User({firstName,lastName})
-    try {
-        newUser.save()
-        res.status(201).json("new user created successfully")
-        // console.log(newUser)
-        
-    } catch (error) {
-        // console.log(error)
-        
-    }
 
-
-})
 
 
 
@@ -369,6 +358,57 @@ app.post("/newsletter",async(req,res)=>{
     }
   });
 
+
+
+})
+app.post('/visitor',async(req,res)=>{
+  const { pageName } = req.body;
+  console.log(pageName)
+  try {
+      const page = await Visitor.findOneAndUpdate(
+          { name: pageName },
+          { $inc: { visitorCount: 1 } },
+          { new: true, upsert: true }
+      );
+      res.json(page);
+      // console.log(page)
+  } catch (error) {
+      res.status(500).json({ error: 'Server error' });
+  }
+
+
+ 
+})
+
+app.post("/wishlist/:id",async(req,res)=>{
+  const product = req.body
+  const user = await User.findById(req.params.id)
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+}
+
+const newWishItem = product;
+        user.wishItems.push(newWishItem);
+
+        // Save the updated user document
+        await user.save();
+
+
+        // console.log(user)
+
+
+})
+
+app.get('/wishes/:id',async(req,res)=>{
+  const user = await User.findById(req.params.id)
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+}
+
+
+const wishes = user.wishItems
+
+res.json(wishes)
 
 
 })
