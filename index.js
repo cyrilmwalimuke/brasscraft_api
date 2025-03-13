@@ -209,7 +209,7 @@ app.post('/add-product',async (req,res)=>{
   res.json("new product created")
 })
 
-app.get('/get', async(req,res)=>{
+app.get('/get-products', async(req,res)=>{
   const products = await Product.find({});
   res.json(products)
 })
@@ -431,6 +431,46 @@ const wishes = user.wishItems
 res.json(wishes)
 
 
+})
+
+
+const getPercentageChange = (current, previous) => {
+  if (previous === 0) return current > 0 ? 100 : 0;
+  return ((current - previous) / previous * 100).toFixed(1);
+};
+
+app.get('/order-stats', async (req, res) => {
+  try {
+      const currentMonth = new Date().getMonth();
+      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+
+      const currentMonthOrders = await Order.find({
+          createdAt: { $gte: new Date(new Date().getFullYear(), currentMonth, 1) }
+      });
+
+      const lastMonthOrders = await Order.find({
+          createdAt: { $gte: new Date(new Date().getFullYear(), lastMonth, 1), 
+                       $lt: new Date(new Date().getFullYear(), currentMonth, 1) }
+      });
+
+      const currentMonthCount = currentMonthOrders.length;
+      const lastMonthCount = lastMonthOrders.length;
+
+      // Status counts
+      const processingOrders = currentMonthOrders.filter(o => o.status === 'Processing').length;
+      const shippedOrders = currentMonthOrders.filter(o => o.status === 'Shipped').length;
+      const completedOrders = currentMonthOrders.filter(o => o.status === 'Completed').length;
+
+      res.json({
+          totalOrders: { count: currentMonthCount, change: getPercentageChange(currentMonthCount, lastMonthCount) },
+          processing: { count: processingOrders, change: getPercentageChange(processingOrders, lastMonthOrders.filter(o => o.status === 'Processing').length) },
+          shipped: { count: shippedOrders, change: getPercentageChange(shippedOrders, lastMonthOrders.filter(o => o.status === 'Shipped').length) },
+          completed: { count: completedOrders, change: getPercentageChange(completedOrders, lastMonthOrders.filter(o => o.status === 'Completed').length) }
+      });
+
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
 })
 
 
