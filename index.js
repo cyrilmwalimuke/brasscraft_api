@@ -104,6 +104,21 @@ app.get('/single-order/:id',async(req,res)=>{
 })
 
 
+app.put("/orders/:id", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
 
 
 
